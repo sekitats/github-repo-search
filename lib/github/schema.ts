@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const repositorySchema = z.object({
+export const RepositorySchema = z.object({
   id: z.number(),
   name: z.string(),
   full_name: z.string(),
@@ -14,3 +14,12 @@ export const repositorySchema = z.object({
   forks_count: z.number(),
   open_issues_count: z.number(),
 });
+
+export const RepositoriesSchema = z.object({
+  total_count: z.number(),
+  incomplete_results: z.boolean(),
+  items: z.array(RepositorySchema)
+})
+
+export type Repository = z.infer<typeof RepositorySchema>
+export type Repositories = z.infer<typeof RepositoriesSchema>;

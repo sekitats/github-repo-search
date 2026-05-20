@@ -17,11 +17,11 @@ export default async function RepositoryDetail({ searchParams }: Props) {
       </div>
 
       <div>
-          <div>Star数: {data.stargazers_count}</div>
-          <div>Watchers数: {data.watchers_count}</div>
-          <div>Forks数: {data.forks_count}</div>
-          <div>Open Issues数: {data.open_issues_count}</div>
-        </div>
+        <div>Star数: {data.stargazers_count}</div>
+        <div>Watchers数: {data.watchers_count}</div>
+        <div>Forks数: {data.forks_count}</div>
+        <div>Open Issues数: {data.open_issues_count}</div>
+      </div>
     </div>
   )
 }

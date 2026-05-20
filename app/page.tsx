@@ -1,27 +1,38 @@
-import Image from "next/image";
-import Link from "next/link";
-import { searchRepositories } from "@/lib/github/repositories";
+import { getRepositories } from "@/lib/github/service";
+import { RepoList } from "@/features/search/components/RepoList";
+import { SearchForm } from "@/features/search/components/SearchForm";
+import { Suspense } from "react";
+import { Spinner } from "@/components/ui/spinner";
 
-export default async function Home() {
-  const res = await searchRepositories('next.js')
-
+export default function Page({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   return (
     <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
       <header className="flex w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
         <h1 className="text-2xl font-bold">Github repo search</h1>
       </header>
       <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <ul className="flex flex-col gap-4">
-          {res.items.map((item) => (
-            <li key={item.id} className="flex items-center gap-4">
-              <Image src={item.owner.avatar_url} alt={item.owner.login} width={40} height={40} className="rounded-full" />
-              <Link href={`/repos/${item.owner.login}/${item.name}`}>
-                {item.name}
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <SearchForm />
+        <Suspense fallback={<Spinner />}>
+          <Results searchParams={searchParams} />
+        </Suspense>
       </main>
     </div>
   );
+}
+
+async function Results({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
+  const query = (await searchParams)?.q ?? "";
+
+  if (!query) return null;
+
+  const res = await getRepositories(query);
+  if (!res.ok) {
+    return <p>Error: {res.error.message}</p>
+  }
+  if (res.data.items.length === 0) {
+    return <p>リポジトリがありません。</p>
+  }
+
+  return <RepoList items={res.data.items} />;
+
 }

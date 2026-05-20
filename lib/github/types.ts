@@ -1,29 +1,8 @@
-export type RepositorySummary = {
-  id: number;
-  name: string;
-  owner: {
-    login: string;
-    avatar_url: string;
-  }
-}
+export type ApiError =
+  | { kind: "api"; message: string }
+  | { kind: "schema"; message: string }
+  | { kind: "unknown"; message: string }
 
-export type Repositories = {
-  total_count: number;
-  incomplete_results: boolean;
-  items: RepositorySummary[];
-}
-
-export type Repository = {
-  id: number;
-  name: string;
-  full_name: string;
-  owner: {
-    login: string;
-    avatar_url: string;
-  },
-  language: string | null;
-  stargazers_count: number;
-  watchers_count: number;
-  forks_count: number;
-  open_issues_count: number;
-}
+export type Result<T, E = ApiError> =
+  | { ok: true; data: T }
+  | { ok: false; error: E };

@@ -1,7 +1,8 @@
 import { cacheLife } from "next/cache";
 import { githubClient } from "./client";
-import { Repository, Repositories } from "./types";
+import { type Repositories, RepositoriesSchema, RepositorySchema } from "./schema";
 import { toRepository } from "./adapter";
+import { SchemaValidationError } from "./errors";
 
 export async function searchRepositories(query: string, page: number = 1, limit: number = 10): Promise<Repositories> {
   'use cache'
@@ -12,12 +13,17 @@ export async function searchRepositories(query: string, page: number = 1, limit:
     page: page.toString()
   })
   const path = `search/repositories?${params.toString()}`;
-  const data = await githubClient<Repositories>(path);
+  const data = await githubClient(path);
+  const parsed = RepositoriesSchema.safeParse(data);
+
+  if (!parsed.success) {
+    throw new SchemaValidationError(parsed.error.message);
+  }
 
   return {
-    total_count: data.total_count,
-    incomplete_results: data.incomplete_results,
-    items: data.items.map(toRepository),
+    total_count: parsed.data.total_count,
+    incomplete_results: parsed.data.incomplete_results,
+    items: parsed.data.items.map(toRepository),
   }
 }
 
@@ -25,7 +31,12 @@ export async function getRepository(owner: string, name: string) {
   'use cache'
   cacheLife('minutes');
   const path = `repos/${owner}/${name}`;
-  const data = await githubClient<Repository>(path);
+  const data = await githubClient(path);
+  const parsed = RepositorySchema.safeParse(data);
 
-  return toRepository(data)
+  if (!parsed.success) {
+    throw new SchemaValidationError(parsed.error.message);
+  }
+
+  return toRepository(parsed.data)
 }
