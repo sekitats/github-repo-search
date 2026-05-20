@@ -4,10 +4,3 @@ export class GitHubApiError extends Error {
     this.name = "GitHubApiError";
   }
 }
-
-export class SchemaValidationError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "SchemaValidationError";
-  }
-}

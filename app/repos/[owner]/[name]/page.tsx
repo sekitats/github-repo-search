@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import RepositoryDetail from "@/features/search/components/SearchResults";
+import RepositoryDetail from "@/features/search/components/RepositoryDetail";
 import { Spinner } from "@/components/ui/spinner";
 
 type Params = {
