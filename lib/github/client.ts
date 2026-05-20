@@ -1,3 +1,5 @@
+import { GitHubApiError } from "./errors";
+
 const BASE_URL = "https://api.github.com";
 
 export const githubClient = async (
@@ -7,10 +9,15 @@ export const githubClient = async (
   const res = await fetch(`${BASE_URL}/${path}`, {
     ...option,
     headers: {
-      Accept: "application/vnd.github+json",
-      "X-GitHub-Api-Version": "2022-11-28",
+      Accept: "application/vnd.github.v3+json",
     },
   })
 
-  return res.json();
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw new GitHubApiError(res.status, data);
+  }
+
+  return data;
 }
