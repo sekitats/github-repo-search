@@ -27,7 +27,7 @@ export function SearchForm() {
   };
 
   return (
-    <div className="flex gap-2">
+    <div className="flex gap-3">
       <div className="relative flex-1">
         <Input
           ref={inputRef}
@@ -38,6 +38,7 @@ export function SearchForm() {
           onKeyDown={(e) => {
             if (e.key === "Enter") submit();
           }}
+          className="h-12 rounded-lg px-4 text-base md:text-base"
         />
         {hasValue && (
           <Button
@@ -46,13 +47,18 @@ export function SearchForm() {
             size="icon"
             onClick={clear}
             aria-label="クリア"
-            className="absolute right-1 top-0.5 h-7 w-7"
+            className="absolute right-2 inset-y-0 my-auto h-8 w-8 transition-none active:translate-y-0"
           >
             <X className="h-4 w-4" />
           </Button>
         )}
       </div>
-      <Button type="button" onClick={submit} disabled={!hasValue}>
+      <Button
+        type="button"
+        onClick={submit}
+        disabled={!hasValue}
+        className="h-12 rounded-lg px-6 text-base"
+      >
         検索
       </Button>
     </div>
