@@ -1,5 +1,5 @@
 import { searchRepositories, fetchRepository } from "./repositories";
-import { GitHubApiError } from "./errors";
+import { isGitHubApiError } from "./errors";
 import { ERROR_MESSAGE, GithubApiErrorType, Result } from "./types";
 import type { Repositories, Repository } from "./schema";
 import { notFound } from "next/navigation";
@@ -12,7 +12,7 @@ export async function getRepositories(
     const data = await searchRepositories(query, options?.page, options?.perPage);
     return { data };
   } catch (e) {
-    if (e instanceof GitHubApiError) {
+    if (isGitHubApiError(e)) {
       switch(e.status) {
         case 403:
           return {
@@ -48,7 +48,7 @@ export async function getRepository(
     const data = await fetchRepository(owner, name);
     return { data };
   } catch (e) {
-    if (e instanceof GitHubApiError) {
+    if (isGitHubApiError(e)) {
       switch(e.status) {
         case 403:
           return {

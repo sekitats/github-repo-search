@@ -16,7 +16,7 @@ export const githubClient = async (
   const data = await res.json();
 
   if (!res.ok) {
-    throw new GitHubApiError(res.status, data);
+    throw new GitHubApiError(res.status, JSON.stringify(data));
   }
 
   return data;
