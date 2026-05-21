@@ -2,16 +2,24 @@ import { GitHubApiError } from "./errors";
 
 const BASE_URL = "https://api.github.com";
 
+type GithubClientOptions = {
+  revalidate?: number;
+  tags?: string[];
+};
+
 export const githubClient = async (
   path: string,
-  option?: RequestInit
+  options?: GithubClientOptions
 ): Promise<unknown> => {
   const res = await fetch(`${BASE_URL}/${path}`, {
-    ...option,
     headers: {
       Accept: "application/vnd.github.v3+json",
     },
-  })
+    next: {
+      revalidate: options?.revalidate,
+      tags: options?.tags,
+    },
+  });
 
   const data = await res.json();
 
@@ -20,4 +28,4 @@ export const githubClient = async (
   }
 
   return data;
-}
+};
