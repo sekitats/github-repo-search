@@ -1,17 +1,17 @@
-import { cacheLife } from "next/cache";
 import { githubClient } from "./client";
 import { type Repositories, RepositoriesSchema, RepositorySchema } from "./schema";
 
 export async function searchRepositories(query: string, page: number = 1, limit: number = 10): Promise<Repositories> {
-  'use cache'
-  cacheLife('hours');
   const params = new URLSearchParams({
     q: query,
     per_page: limit.toString(),
     page: page.toString()
   })
   const path = `search/repositories?${params.toString()}`;
-  const data = await githubClient(path);
+  const data = await githubClient(path, {
+    revalidate: 3600,
+    tags: ["repositories:search", `repositories:search:${query}`],
+  });
   const parsed = RepositoriesSchema.parse(data);
 
   return {
@@ -22,10 +22,11 @@ export async function searchRepositories(query: string, page: number = 1, limit:
 }
 
 export async function fetchRepository(owner: string, name: string) {
-  'use cache'
-  cacheLife('minutes');
   const path = `repos/${owner}/${name}`;
-  const data = await githubClient(path);
+  const data = await githubClient(path, {
+    revalidate: 60,
+    tags: [`repositories:detail:${owner}/${name}`],
+  });
   const parsed = RepositorySchema.parse(data);
 
   return parsed;
