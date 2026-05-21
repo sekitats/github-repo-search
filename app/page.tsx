@@ -16,19 +16,14 @@ type Props = {
 
 export default function Page({ searchParams }: Props) {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <header className="flex w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <h1 className="text-2xl font-bold">Github repo search</h1>
-      </header>
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Suspense fallback={<div className="h-10 w-full" />}>
-          <SearchForm />
-        </Suspense>
-        <Suspense fallback={<Spinner />}>
-          <SearchResult searchParams={searchParams} />
-        </Suspense>
-      </main>
-    </div>
+    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-4 py-12 sm:px-6 sm:py-16">
+      <Suspense fallback={<div className="h-12 w-full" />}>
+        <SearchForm />
+      </Suspense>
+      <Suspense fallback={<Spinner />}>
+        <SearchResult searchParams={searchParams} />
+      </Suspense>
+    </main>
   );
 }
 
@@ -42,18 +37,24 @@ async function SearchResult({ searchParams }: Props) {
 
   const res = await getRepositories(query, { page, perPage });
   if (res.error) {
-    return <p>{res.error.message}</p>
+    return (
+      <p className="text-sm text-destructive" role="alert">
+        {res.error.message}
+      </p>
+    );
   }
   if (res.data.items.length === 0) {
-    return <p>リポジトリがありません。</p>
+    return (
+      <p className="text-sm text-muted-foreground">リポジトリがありません。</p>
+    );
   }
 
   const totalPages = Math.ceil(res.data.total_count / perPage);
 
   return (
-    <div className="w-full flex flex-col items-center gap-8">
+    <section className="flex w-full flex-col gap-6">
       <RepoList items={res.data.items} />
       <RepoPagination q={query} page={page} totalPages={totalPages} />
-    </div>
+    </section>
   );
 }
