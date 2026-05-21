@@ -4,6 +4,12 @@ import { SearchForm } from "@/features/search/components/SearchForm";
 import { Suspense } from "react";
 import { Spinner } from "@/components/ui/spinner";
 import { RepoPagination } from "@/features/search/components/RepoPagination";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "GitHub Repo Search",
+  description: "GitHubリポジトリを検索するアプリ",
+}
 
 type SearchParams = {
   q?: string;
@@ -14,7 +20,7 @@ type Props = {
   searchParams: Promise<SearchParams>;
 };
 
-export default function Page({ searchParams }: Props) {
+export default function TopPage({ searchParams }: Props) {
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-8 px-4 py-12 sm:px-6 sm:py-16">
       <Suspense fallback={<div className="h-12 w-full" />}>
