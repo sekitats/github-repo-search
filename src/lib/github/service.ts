@@ -1,16 +1,34 @@
-import { searchRepositories, fetchRepository } from "./repositories";
 import { isGitHubApiError } from "./errors";
 import { ERROR_MESSAGE, GithubApiErrorType, Result } from "./types";
-import type { Repositories, Repository } from "./schema";
+import { RepositoriesSchema, RepositorySchema, type Repositories, type Repository } from "./schema";
 import { notFound } from "next/navigation";
+import { githubClient } from "./client";
+
+export type Options = {
+  page?: number;
+  perPage?: number;
+};
 
 export async function getRepositories(
   query: string,
-  options?: { page: number; perPage: number }
+  options?: Options
 ): Promise<Result<Repositories, GithubApiErrorType>> {
   try {
-    const data = await searchRepositories(query, options?.page, options?.perPage);
-    return { data };
+    const page = options?.page ?? 1;
+    const perPage = options?.perPage ?? 10;
+    const params = new URLSearchParams({
+      q: query,
+      per_page: String(perPage),
+      page: String(page)
+    })
+    const path = `search/repositories?${params.toString()}`;
+    const data = await githubClient(path, {
+      revalidate: 3600,
+      tags: ["repositories:search", `repositories:search:${query}`],
+    });
+    const parsed = RepositoriesSchema.parse(data);
+  
+    return { data: parsed };
   } catch (e) {
     if (isGitHubApiError(e)) {
       switch(e.status) {
@@ -45,8 +63,14 @@ export async function getRepository(
   name: string
 ): Promise<Result<Repository, GithubApiErrorType>> {
   try {
-    const data = await fetchRepository(owner, name);
-    return { data };
+  const path = `repos/${owner}/${name}`;
+  const data = await githubClient(path, {
+    revalidate: 60,
+    tags: [`repositories:detail:${owner}/${name}`],
+  });
+  const parsed = RepositorySchema.parse(data);
+
+  return { data: parsed };
   } catch (e) {
     if (isGitHubApiError(e)) {
       switch(e.status) {
