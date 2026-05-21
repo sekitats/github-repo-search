@@ -63,7 +63,16 @@ describe('serivce.ts', () => {
         
         await getRepositories('next.js');
         
-        expect(client.githubClient).toHaveBeenCalledWith('search/repositories?q=next.js&per_page=10&page=1');
+        expect(client.githubClient).toHaveBeenCalledWith(
+          'search/repositories?q=next.js&per_page=10&page=1',
+          {
+            "revalidate": 3600,
+            "tags": [
+              "repositories:search",
+              "repositories:search:next.js",
+            ],
+          }
+        );
       })
 
       it('githubClient が正しいパスで呼ばれること', async () => {
@@ -72,7 +81,16 @@ describe('serivce.ts', () => {
         
         await getRepositories('next.js', { page: 2, perPage: 5 });
         
-        expect(client.githubClient).toHaveBeenCalledWith('search/repositories?q=next.js&per_page=5&page=2');
+        expect(client.githubClient).toHaveBeenCalledWith(
+          'search/repositories?q=next.js&per_page=5&page=2',
+          {
+            "revalidate": 3600,
+            "tags": [
+              "repositories:search",
+              "repositories:search:next.js",
+            ],
+          }
+        );
       })
 
       it('zod の parse によって不要なフィールドが取り除かれること', async () => {
@@ -151,7 +169,15 @@ describe('serivce.ts', () => {
 
         await getRepository('vercel', 'next.js');
 
-        expect(client.githubClient).toHaveBeenCalledWith('repos/vercel/next.js');
+        expect(client.githubClient).toHaveBeenCalledWith(
+          'repos/vercel/next.js',
+          {
+            "revalidate": 60,
+            "tags": [
+              "repositories:detail:vercel/next.js",
+            ],
+          }
+        );
       });
 
       it('zod の parse によって不要なフィールドが取り除かれること', async () => {
