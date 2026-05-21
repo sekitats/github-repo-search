@@ -5,10 +5,11 @@ import type { Repositories, Repository } from "./schema";
 import { notFound } from "next/navigation";
 
 export async function getRepositories(
-  query: string
+  query: string,
+  options?: { page: number; perPage: number }
 ): Promise<Result<Repositories, GithubApiErrorType>> {
   try {
-    const data = await searchRepositories(query);
+    const data = await searchRepositories(query, options?.page, options?.perPage);
     return { data };
   } catch (e) {
     if (e instanceof GitHubApiError) {
