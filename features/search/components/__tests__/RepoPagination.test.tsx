@@ -1,26 +1,28 @@
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { useRouter, useSearchParams } from 'next/navigation';
 import { RepoPagination } from '../RepoPagination';
 import type { Props as RepoPaginationProps } from "../RepoPagination"
 
+const { mockPush, mockQuery } = vi.hoisted(() => ({
+  mockPush: vi.fn(),
+  mockQuery: { q: null as string | null },
+}));
+
 vi.mock('next/navigation', () => ({
-  useRouter: vi.fn(),
-  useSearchParams: vi.fn(),
+  useRouter: vi.fn().mockReturnValue({
+    push: mockPush,
+    replace: vi.fn(),
+    refresh: vi.fn(),
+    prefetch: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+  }),
+  useSearchParams: vi.fn().mockImplementation(() =>
+    new URLSearchParams(mockQuery.q ? { q: mockQuery.q } : undefined)
+  ),
 }));
 
 describe('RepoPagination', () => {
-  const mockPush = vi.fn();
-  vi.mocked(useRouter).mockReturnValue({
-    push: mockPush,
-  } as any);
-
-  const mockSearchParams = (value: string | null) => {
-    vi.mocked(useSearchParams).mockReturnValue({
-      get: vi.fn().mockReturnValue(value),
-    } as any);
-  }
-  mockSearchParams(null);
 
   const setupWrapper = (props: RepoPaginationProps) => {
     const user = userEvent.setup();
@@ -30,6 +32,7 @@ describe('RepoPagination', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockQuery.q = null;
   });
 
   it('1ページ目の時は Previous がdisabledになること', () => {
@@ -42,6 +45,7 @@ describe('RepoPagination', () => {
   });
 
   it('最終ページの時は Next がdisabledになること', () => {
+    mockQuery.q = 'next.js';
     const { wrapper } = setupWrapper({ q: 'next.js', page: 10, totalPages: 10 });
 
     const nextButton = wrapper.getByLabelText('Go to next page');

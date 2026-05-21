@@ -1,25 +1,27 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { SearchForm } from '../SearchForm';
-import { useRouter, useSearchParams } from 'next/navigation';
+
+const { mockPush, mockQuery } = vi.hoisted(() => ({
+  mockPush: vi.fn(),
+  mockQuery: { q: null as string | null },
+}));
 
 vi.mock('next/navigation', () => ({
-  useRouter: vi.fn(),
-  useSearchParams: vi.fn(),
+  useRouter: vi.fn().mockReturnValue({
+    push: mockPush,
+    replace: vi.fn(),
+    refresh: vi.fn(),
+    prefetch: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+  }),
+  useSearchParams: vi.fn().mockImplementation(() =>
+    new URLSearchParams(mockQuery.q ? { q: mockQuery.q } : undefined)
+  ),
 }));
 
 describe('SearchForm', () => {
-  const mockPush = vi.fn();
-  vi.mocked(useRouter).mockReturnValue({
-    push: mockPush,
-  } as any);
-
-  const mockSearchParams = (value: string | null) => {
-    vi.mocked(useSearchParams).mockReturnValue({
-      get: vi.fn().mockReturnValue(value),
-    } as any);
-  }
-  mockSearchParams(null);
 
   const setupWrapper = () => {
     const user = userEvent.setup();
@@ -29,6 +31,7 @@ describe('SearchForm', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockQuery.q = null;
   });
 
   it('初期レンダリング時、入力がない場合は検索ボタンが無効化されていること', () => {
@@ -101,7 +104,7 @@ describe('SearchForm', () => {
   })
 
   it('初期値(URLクエリ)がある場合、最初から入力欄に値が入りボタンが有効なこと', async () => {
-    mockSearchParams('next.js');
+    mockQuery.q = 'next.js';
 
     const { user } = setupWrapper();
 

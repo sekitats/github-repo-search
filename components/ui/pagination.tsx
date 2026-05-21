@@ -45,8 +45,24 @@ function PaginationLink({
   size = "icon",
   ...props
 }: PaginationLinkProps) {
-  // href がある場合は Next.js の Link を、ない場合（disabled時など）は a タグを使う
-  const Comp = props.href ? Link : "a"
+  if (props.href) {
+    return (
+      <Button
+        asChild
+        variant={isActive ? "outline" : "ghost"}
+        size={size}
+        className={cn(className)}
+      >
+        <Link
+          aria-current={isActive ? "page" : undefined}
+          data-slot="pagination-link"
+          data-active={isActive}
+          {...props}
+          href={props.href} // Next.js Link needs a guaranteed href
+        />
+      </Button>
+    )
+  }
 
   return (
     <Button
@@ -55,11 +71,11 @@ function PaginationLink({
       size={size}
       className={cn(className)}
     >
-      <Comp
+      <a
         aria-current={isActive ? "page" : undefined}
         data-slot="pagination-link"
         data-active={isActive}
-        {...(props as any)}
+        {...props}
       />
     </Button>
   )
