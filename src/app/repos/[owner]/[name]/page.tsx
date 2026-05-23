@@ -8,7 +8,7 @@ type Params = {
 };
 type Props = {
   params: Promise<Params>;
-}
+};
 
 export default async function RepositoryPage({ params }: Props) {
   return (
