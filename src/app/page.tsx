@@ -9,13 +9,13 @@ import { Metadata } from "next";
 export const metadata: Metadata = {
   title: "GitHub Repo Search",
   description: "GitHubリポジトリを検索するアプリ",
-}
+};
 
 type SearchParams = {
   q?: string;
   page?: string;
   per_page?: string;
-}
+};
 type Props = {
   searchParams: Promise<SearchParams>;
 };

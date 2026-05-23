@@ -1,17 +1,18 @@
-import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationNext } from "@/components/ui/pagination";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationPrevious,
+  PaginationNext,
+} from "@/components/ui/pagination";
 
 export type Props = {
   q: string;
   page: number;
   totalPages: number;
-}
+};
 
-export function RepoPagination({
-  q,
-  page,
-  totalPages
-}: Props) {
-
+export function RepoPagination({ q, page, totalPages }: Props) {
   const prevUrl = page <= 1 ? undefined : `?q=${q}&page=${page - 1}`;
   const nextUrl = page >= totalPages ? undefined : `?q=${q}&page=${page + 1}`;
 
@@ -29,10 +30,12 @@ export function RepoPagination({
           <PaginationNext
             href={nextUrl}
             aria-disabled={page >= totalPages}
-            className={page >= totalPages ? "pointer-events-none opacity-50" : ""}
+            className={
+              page >= totalPages ? "pointer-events-none opacity-50" : ""
+            }
           />
         </PaginationItem>
       </PaginationContent>
     </Pagination>
-  )
+  );
 }

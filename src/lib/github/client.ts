@@ -9,7 +9,7 @@ type GithubClientOptions = {
 
 export const githubClient = async (
   path: string,
-  options?: GithubClientOptions
+  options?: GithubClientOptions,
 ): Promise<unknown> => {
   const res = await fetch(`${BASE_URL}/${path}`, {
     headers: {

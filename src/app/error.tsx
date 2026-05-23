@@ -18,7 +18,10 @@ export default function Error({ error }: ErrorProps) {
   return (
     <main className="flex flex-1 items-center justify-center px-6 py-24">
       <div className="w-full max-w-xl text-center">
-        <p className="font-mono text-xs uppercase text-[var(--mute)]" style={{ letterSpacing: "0.18em" }}>
+        <p
+          className="font-mono text-xs uppercase text-[var(--mute)]"
+          style={{ letterSpacing: "0.18em" }}
+        >
           500 · Server Error
         </p>
 

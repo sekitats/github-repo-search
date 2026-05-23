@@ -23,7 +23,7 @@ export function SearchForm() {
     if (inputRef.current) inputRef.current.value = "";
     setHasValue(false);
     inputRef.current?.focus();
-    router.push("/")
+    router.push("/");
   };
 
   return (
