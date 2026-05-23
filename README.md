@@ -63,7 +63,7 @@ src/
 ※ テストファイルは各機能のディレクトリ直下に配置し、`e2e` は `src` ディレクトリと同階層に配置した。
 
 - API 呼び出しは基本的に Server Component で実行
-  - インクリメントサーチにしなかったのは、仕様書に「検索」ボタンが存在したことと、GitHub API をトークンなしで利用しているため、レートリミットを考慮する必要があるため。
+  - インクリメントサーチにしなかったのは、仕様書に「検索」ボタンが存在したことと、GitHub API をトークンなしで利用していて、レートリミットを考慮する必要があるため。
   - 検索フォームにクリアボタンを追加して `/` に遷移させリセットする仕様にした（仕様書には記載なし）
 - Feature Driven(コロケーション的)なフォルダ設計を採用
 - 当初は `/search` に検索画面を実装したが、TOP に移行
@@ -72,24 +72,24 @@ src/
 
 ### GitHub API
 
-- 検索だけなので、GitHub API トークンを使用しない設計にした。不要なオーバーエンジニアリングを避けた。
+- 公開検索のみの用途であるため、GitHub API トークンを使用しない設計にした。不要なオーバーエンジニアリングを避けた。
 - per_page は開発効率を鑑みてデフォルト10件とした。
-- ページネーションは Previous と Next のみにした。今回は実装コストとテスト工数が増えるため。本来は実装すべき。
-- 未定義プロパティは zod でパース時に除外
+- ページネーションのUIは今回は実装コストとテスト工数のバランスを考慮し `Previous`, `Next` のみにした。（※ 実プロダクトであればページ数も表示すべき。）
+- zod でパース時に不要なフィールドは除外
 
 ### キャッシュ
 
-- 当初は v16 から導入された `use cache` を使ってキャッシュを試みた。
-- fetch の `revalidate tag` に変更（※ 実装時に起きた問題を参照）
+- 開発当初は v16 から導入された `use cache` を使ってキャッシュを試みた。
+- fetch の `revalidate`, `tag` に変更（[※ 実装時に起きた問題を参照](#実装時に起きた問題)）
 
 ### エラーハンドリング
 
 - `search/repositories` は Rate Limit 403, 422をハンドリング、それ以外は `error.tsx` に任せる設計にした。
-  - 存在しないクエリは「リポジトリがありません。」を表示
-  - 403 の場合は 「APIの利用制限に達しました」を表示
-  - 422 の場合は 「検索条件が不正です」を表示（`/?q=react&page=101` 実行で出る）
-- `repos/:owner/:name` は Rate Limit 403, 404 を `notFound` でハンドリング、それ以外は `error.tsx` に任せる設計にした
-  - 403 の場合は 「APIの利用制限に達しました」を表示
+  - 存在しないクエリは `リポジトリがありません。` を表示
+  - 403 の場合は `APIの利用制限に達しました` を表示
+  - 422 の場合は `検索条件が不正です` を表示（`/?q=react&page=101` 実行で出る）
+- `repos/:owner/:name` は Rate Limit 403 をハンドリング、404 は `notFound`、それ以外は `error.tsx` に任せる設計にした
+  - 403 の場合は `APIの利用制限に達しました` を表示
   - 404 の場合は notFound を表示
 
 ### エラー時のスクリーンショット
@@ -105,17 +105,23 @@ src/
 ### テスト
 
 - テスティングフレームワークは vitest を使用
-  - GitHub API クライアント(`client.ts`) を mock し、`service.ts` の API のレスポンスのテストを実装 (`lib/__tests__/service.test.ts`)
+  - GitHub API クライアント `client.ts` を mock し、`service.ts` の API のレスポンスのテストを実装した。
   - 実を言うと、`client.ts` をモックしてテストしていたが、AIにレビューしてもらい、`fetch` をモックするべきとアドバイスを受けて修正した。
+
+##### lib/github のカバレッジ１００％
 
 ![lib test coverage](./docs/screenshot/image-lib-test-coverage.png)
 
-- `SearchForm`, `RepoPagination` のコンポーネントのテストを行った。
+- `SearchForm`, `RepoPagination` のコンポーネントのテスト
+
+##### features/search/components のカバレッジ100%
 
 ![components test coverage](./docs/screenshot/image-components-test-coverage.png)
 
 - E2Eテストは playwright を使用。
   - TopPage, RepoDetailPage はサーバーコンポーネントなので、jsdom でテストができないため、E2Eテストとした。
+
+##### e2e report
 
 ![e2e test report](./docs/screenshot/image-e2e-test-report.png)
 
@@ -146,7 +152,7 @@ src/
 - Antigravity (Gemini 3.1)
 - Antigravity IDE (Gemini 3.5)
 
-AI を使った範囲
+### AI を使った範囲
 
 - デザイン実装（Vercel DESIGN.md を参照させた）
 - Next.js v16 の最新動向の確認
@@ -164,13 +170,12 @@ AI を使った範囲
 
 ## 工夫した点
 
-- 私のテストについてのポリシーは、テスティングトロフィーに則ってE2Eを少なめにし、インテグレーションテストを中心にテストすることです。Client Component は jsdom でテスト可能ですが、Server Component は jsdom でテストができないため、E2Eテストにしました。
+- 私のテストについてのポリシーは、テスティングトロフィーに則ってE2Eを少なめにし、インテグレーションテストを中心にテストすることです。Client Component は jsdom でテスト可能ですが、Server Component は jsdom でテストができないため、E2Eテストにした。
 - Server Component を Container/Presentational パターンにして純粋な関数としてのコンポーネントをテストすることも可能だが、そこまで複雑なロジックがないコンポーネントをテストする価値は高くないと判断した。
 
 ## 課題
 
-- E2Eテストでは、本番と同等の環境でのテストを想定し、実際のAPIをコールしているので、Rate Limitに達する可能性がありFlaky なテストです。
-- プロダクション規模では、CI 用に GitHub Personal Access Token を発行して Rate Limit を上げる対応が現実的。
+- E2Eテストでは、本番と同等の環境でのテストを想定し、実際のAPIをコールしているので、Rate Limitに達する可能性があります。今回は制限内に収まる程度のテストなので問題なかったが、Flaky なテストなので、実プロダクトでは、CI 用に GitHub Personal Access Token を発行して Rate Limit を上げる対応が現実的。
 
 ## 実装時に起きた問題
 
