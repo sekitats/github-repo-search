@@ -158,6 +158,7 @@ describe("serivce.ts", () => {
       });
 
       it("GitHub APIから想定外のデータ構造が返ってきた場合、ZodErrorを投げること", async () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         mockGithubClientSuccess({ invalid_key: "corrupted_data" } as any);
         consoleHideTestErrorLog(/ZodError/);
 
@@ -259,6 +260,7 @@ describe("serivce.ts", () => {
       });
 
       it("GitHub APIから想定外のデータ構造が返ってきた場合、ZodErrorを投げること", async () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         mockGithubClientSuccess({ invalid_key: "corrupted_data" } as any);
         consoleHideTestErrorLog(/ZodError/);
 
