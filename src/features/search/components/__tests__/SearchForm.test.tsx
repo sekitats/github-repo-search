@@ -93,6 +93,16 @@ describe("SearchForm", () => {
     expect(mockPush).toHaveBeenCalledWith("/?q=react");
   });
 
+  it("query が空文字で検索を実行すると、router.push は呼ばれないこと", async () => {
+    const { user } = setupWrapper();
+
+    const input = screen.getByPlaceholderText("リポジトリを検索");
+    await user.type(input, " "); // スペースを入力
+    await user.keyboard("{Enter}");
+
+    expect(mockPush).not.toHaveBeenCalled();
+  });
+
   it("Enterキーを押すと検索が実行されること", async () => {
     const { user } = setupWrapper();
 
