@@ -87,7 +87,7 @@ src/
 - `search/repositories` は Rate Limit 403, 422をハンドリング、それ以外は `error.tsx` に任せる設計にした。
   - 存在しないクエリは「リポジトリがありません。」を表示
   - 403 の場合は 「APIの利用制限に達しました」を表示
-  - 422 の場合は 「検索条件が不正です」を表示（出ることはないはず）
+  - 422 の場合は 「検索条件が不正です」を表示（`/?q=react&page=101` 実行で出る）
 - `repos/:owner/:name` は Rate Limit 403, 404 を `notFound` でハンドリング、それ以外は `error.tsx` に任せる設計にした
   - 403 の場合は 「APIの利用制限に達しました」を表示
   - 404 の場合は notFound を表示
@@ -106,9 +106,18 @@ src/
 
 - テスティングフレームワークは vitest を使用
   - GitHub API クライアント(`client.ts`) を mock し、`service.ts` の API のレスポンスのテストを実装 (`lib/__tests__/service.test.ts`)
-  - `SearchForm`, `RepoPagination` のコンポーネントのテストを行った。
+  - 実を言うと、`client.ts` をモックしてテストしていたが、AIにレビューしてもらい、`fetch` をモックするべきとアドバイスを受けて修正した。
+
+![lib test coverage](./docs/screenshot/image-lib-test-coverage.png)
+
+- `SearchForm`, `RepoPagination` のコンポーネントのテストを行った。
+
+![components test coverage](./docs/screenshot/image-components-test-coverage.png)
+
 - E2Eテストは playwright を使用。
   - TopPage, RepoDetailPage はサーバーコンポーネントなので、jsdom でテストができないため、E2Eテストとした。
+
+![e2e test report](./docs/screenshot/image-e2e-test-report.png)
 
 ### デザイン
 
@@ -144,6 +153,7 @@ AI を使った範囲
 - PRの概要をまとめる
 - バグ調査の壁打ち
 - 設計の壁打ち
+- 最後のレビュー
 
 ### AI に任せなかった範囲
 

@@ -1,20 +1,25 @@
 import { vi } from "vitest";
 import { getRepositories, getRepository } from "../service";
 import { GitHubApiError } from "../errors";
-import * as client from "../client";
-import { Repositories, Repository } from "../schema";
+import type { Repositories, Repository } from "../schema";
 
 vi.mock("next/cache", () => ({
   cacheLife: vi.fn(),
 }));
-vi.mock("../client");
 
 describe("serivce.ts", () => {
   const mockGithubClientSuccess = (data: Repositories | Repository) => {
-    vi.mocked(client.githubClient).mockResolvedValue(data);
+    vi.spyOn(globalThis, "fetch").mockImplementationOnce(async () => {
+      return Response.json(data, { status: 200 });
+    });
   };
-  const mockGithubClientError = (error: Error) => {
-    vi.mocked(client.githubClient).mockRejectedValue(error);
+  const mockGithubClientError = (status: number, error: Error) => {
+    vi.spyOn(globalThis, "fetch").mockImplementationOnce(async () => {
+      return Response.json({ message: error.message }, { status });
+    });
+  };
+  const mockFetchNetworkError = (error: Error) => {
+    vi.spyOn(globalThis, "fetch").mockRejectedValueOnce(error);
   };
   const consoleHideTestErrorLog = (pattern: RegExp) => {
     vi.spyOn(console, "error").mockImplementationOnce((message: string) => {
@@ -25,6 +30,7 @@ describe("serivce.ts", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.resetAllMocks();
+    vi.restoreAllMocks();
   });
 
   const createRepositoriesResponse = (count: number) => {
@@ -62,28 +68,32 @@ describe("serivce.ts", () => {
 
         await getRepositories("next.js");
 
-        expect(client.githubClient).toHaveBeenCalledWith(
-          "search/repositories?q=next.js&per_page=10&page=1",
+        expect(globalThis.fetch).toHaveBeenCalledWith(
+          "https://api.github.com/search/repositories?q=next.js&per_page=10&page=1",
           {
-            revalidate: 3600,
-            tags: ["repositories:search", "repositories:search:next.js"],
+            headers: {
+              Accept: "application/vnd.github.v3+json",
+            },
+            next: {
+              revalidate: 3600,
+              tags: ["repositories:search", "repositories:search:next.js"],
+            },
           },
         );
       });
 
-      it("githubClient が正しいパスで呼ばれること", async () => {
-        const testData = createRepositoriesResponse(20);
+      it("ページネーションのパラメータが正しく渡されること", async () => {
+        const testData = createRepositoriesResponse(5);
         mockGithubClientSuccess(testData);
 
-        await getRepositories("next.js", { page: 2, perPage: 5 });
+        const res = await getRepositories("next.js", { page: 2, perPage: 5 });
 
-        expect(client.githubClient).toHaveBeenCalledWith(
-          "search/repositories?q=next.js&per_page=5&page=2",
-          {
-            revalidate: 3600,
-            tags: ["repositories:search", "repositories:search:next.js"],
-          },
+        expect(globalThis.fetch).toHaveBeenCalledWith(
+          "https://api.github.com/search/repositories?q=next.js&per_page=5&page=2",
+          expect.any(Object),
         );
+
+        expect(res.data?.items.length).toBe(5);
       });
 
       it("zod の parse によって不要なフィールドが取り除かれること", async () => {
@@ -99,7 +109,10 @@ describe("serivce.ts", () => {
 
     describe("error", () => {
       it("403 エラーを RATE_LIMIT_EXCEEDED に正規化する", async () => {
-        mockGithubClientError(new GitHubApiError(403, "Rate Limit exceeded"));
+        mockGithubClientError(
+          403,
+          new GitHubApiError(403, "Rate Limit exceeded"),
+        );
 
         const res = await getRepositories("nextjs");
         expect(res).toEqual({
@@ -112,7 +125,10 @@ describe("serivce.ts", () => {
       });
 
       it("422 エラーを UNPROCESSABLE_ENTITY に正規化する", async () => {
-        mockGithubClientError(new GitHubApiError(422, "Validation failed"));
+        mockGithubClientError(
+          422,
+          new GitHubApiError(422, "Validation failed"),
+        );
 
         const res = await getRepositories("test-query");
         expect(res).toEqual({
@@ -125,7 +141,10 @@ describe("serivce.ts", () => {
       });
 
       it("Github の500 エラーはそのまま返却されること", async () => {
-        mockGithubClientError(new GitHubApiError(500, "Internal server error"));
+        mockGithubClientError(
+          500,
+          new GitHubApiError(500, "Internal server error"),
+        );
 
         await expect(getRepositories("nextjs")).rejects.toThrow(
           "Internal server error",
@@ -133,7 +152,7 @@ describe("serivce.ts", () => {
       });
 
       it("予期せぬエラーはそのまま返却されること", async () => {
-        mockGithubClientError(new Error("Unknown test error"));
+        mockFetchNetworkError(new Error("Unknown test error"));
         consoleHideTestErrorLog(/Unknown test error/);
 
         await expect(getRepositories("nextjs")).rejects.toThrow(
@@ -165,11 +184,16 @@ describe("serivce.ts", () => {
 
         await getRepository("vercel", "next.js");
 
-        expect(client.githubClient).toHaveBeenCalledWith(
-          "repos/vercel/next.js",
+        expect(globalThis.fetch).toHaveBeenCalledWith(
+          "https://api.github.com/repos/vercel/next.js",
           {
-            revalidate: 60,
-            tags: ["repositories:detail:vercel/next.js"],
+            headers: {
+              Accept: "application/vnd.github.v3+json",
+            },
+            next: {
+              revalidate: 60,
+              tags: ["repositories:detail:vercel/next.js"],
+            },
           },
         );
       });
@@ -186,7 +210,10 @@ describe("serivce.ts", () => {
 
     describe("error", () => {
       it("403 エラーを RATE_LIMIT_EXCEEDED に正規化する", async () => {
-        mockGithubClientError(new GitHubApiError(403, "Rate Limit exceeded"));
+        mockGithubClientError(
+          403,
+          new GitHubApiError(403, "Rate Limit exceeded"),
+        );
 
         const res = await getRepository("vercel", "next.js");
         expect(res).toEqual({
@@ -199,7 +226,7 @@ describe("serivce.ts", () => {
       });
 
       it("404 エラーはそのまま返却されること", async () => {
-        mockGithubClientError(new GitHubApiError(404, "Not Found"));
+        mockGithubClientError(404, new GitHubApiError(404, "Not Found"));
 
         await expect(getRepository("owner-x", "repo-x")).rejects.toThrow(
           "NEXT_HTTP_ERROR_FALLBACK;404",
@@ -207,7 +234,10 @@ describe("serivce.ts", () => {
       });
 
       it("Github の500 エラーはそのまま返却されること", async () => {
-        mockGithubClientError(new GitHubApiError(500, "Internal server error"));
+        mockGithubClientError(
+          500,
+          new GitHubApiError(500, "Internal server error"),
+        );
 
         await expect(getRepository("vercel", "nextjs")).rejects.toThrow(
           "Internal server error",
@@ -215,7 +245,7 @@ describe("serivce.ts", () => {
       });
 
       it("予期せぬエラーはそのまま返却されること", async () => {
-        mockGithubClientError(new Error("Unknown test error"));
+        mockFetchNetworkError(new Error("Unknown test error"));
         consoleHideTestErrorLog(/Unknown test error/);
 
         await expect(getRepository("vercel", "next.js")).rejects.toThrow(
