@@ -86,14 +86,20 @@ describe("serivce.ts", () => {
         const testData = createRepositoriesResponse(5);
         mockGithubClientSuccess(testData);
 
-        const res = await getRepositories("next.js", { page: 2, perPage: 5 });
+        await getRepositories("next.js", { page: 2, perPage: 5 });
 
         expect(globalThis.fetch).toHaveBeenCalledWith(
           "https://api.github.com/search/repositories?q=next.js&per_page=5&page=2",
-          expect.any(Object),
+          {
+            headers: {
+              Accept: "application/vnd.github.v3+json",
+            },
+            next: {
+              revalidate: 3600,
+              tags: ["repositories:search", "repositories:search:next.js"],
+            },
+          },
         );
-
-        expect(res.data?.items.length).toBe(5);
       });
 
       it("zod の parse によって不要なフィールドが取り除かれること", async () => {
