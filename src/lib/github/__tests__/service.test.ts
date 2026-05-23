@@ -157,6 +157,14 @@ describe("serivce.ts", () => {
         );
       });
 
+      it("GitHub APIから想定外のデータ構造が返ってきた場合、ZodErrorを投げること", async () => {
+        mockGithubClientSuccess({ invalid_key: "corrupted_data" } as any);
+        consoleHideTestErrorLog(/ZodError/);
+
+        // getRepositories がエラー（ZodError）を投げることを検証
+        await expect(getRepositories("next.js")).rejects.toThrow();
+      });
+
       it("予期せぬエラーはそのまま返却されること", async () => {
         mockFetchNetworkError(new Error("Unknown test error"));
         consoleHideTestErrorLog(/Unknown test error/);
@@ -248,6 +256,13 @@ describe("serivce.ts", () => {
         await expect(getRepository("vercel", "nextjs")).rejects.toThrow(
           "Internal server error",
         );
+      });
+
+      it("GitHub APIから想定外のデータ構造が返ってきた場合、ZodErrorを投げること", async () => {
+        mockGithubClientSuccess({ invalid_key: "corrupted_data" } as any);
+        consoleHideTestErrorLog(/ZodError/);
+
+        await expect(getRepository("vercel", "next.js")).rejects.toThrow();
       });
 
       it("予期せぬエラーはそのまま返却されること", async () => {
