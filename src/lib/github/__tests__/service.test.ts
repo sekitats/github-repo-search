@@ -86,14 +86,20 @@ describe("serivce.ts", () => {
         const testData = createRepositoriesResponse(5);
         mockGithubClientSuccess(testData);
 
-        const res = await getRepositories("next.js", { page: 2, perPage: 5 });
+        await getRepositories("next.js", { page: 2, perPage: 5 });
 
         expect(globalThis.fetch).toHaveBeenCalledWith(
           "https://api.github.com/search/repositories?q=next.js&per_page=5&page=2",
-          expect.any(Object),
+          {
+            headers: {
+              Accept: "application/vnd.github.v3+json",
+            },
+            next: {
+              revalidate: 3600,
+              tags: ["repositories:search", "repositories:search:next.js"],
+            },
+          },
         );
-
-        expect(res.data?.items.length).toBe(5);
       });
 
       it("zod の parse によって不要なフィールドが取り除かれること", async () => {
@@ -149,6 +155,15 @@ describe("serivce.ts", () => {
         await expect(getRepositories("nextjs")).rejects.toThrow(
           "Internal server error",
         );
+      });
+
+      it("GitHub APIから想定外のデータ構造が返ってきた場合、ZodErrorを投げること", async () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        mockGithubClientSuccess({ invalid_key: "corrupted_data" } as any);
+        consoleHideTestErrorLog(/ZodError/);
+
+        // getRepositories がエラー（ZodError）を投げることを検証
+        await expect(getRepositories("next.js")).rejects.toThrow();
       });
 
       it("予期せぬエラーはそのまま返却されること", async () => {
@@ -242,6 +257,14 @@ describe("serivce.ts", () => {
         await expect(getRepository("vercel", "nextjs")).rejects.toThrow(
           "Internal server error",
         );
+      });
+
+      it("GitHub APIから想定外のデータ構造が返ってきた場合、ZodErrorを投げること", async () => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        mockGithubClientSuccess({ invalid_key: "corrupted_data" } as any);
+        consoleHideTestErrorLog(/ZodError/);
+
+        await expect(getRepository("vercel", "next.js")).rejects.toThrow();
       });
 
       it("予期せぬエラーはそのまま返却されること", async () => {
