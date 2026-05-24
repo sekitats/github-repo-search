@@ -3,10 +3,6 @@ import { getRepositories, getRepository } from "../service";
 import { GitHubApiError } from "../errors";
 import type { Repositories, Repository } from "../schema";
 
-vi.mock("next/cache", () => ({
-  cacheLife: vi.fn(),
-}));
-
 describe("serivce.ts", () => {
   const mockGithubClientSuccess = (data: Repositories | Repository) => {
     vi.spyOn(globalThis, "fetch").mockImplementationOnce(async () => {
