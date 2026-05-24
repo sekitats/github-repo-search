@@ -47,7 +47,7 @@ pnpm test:e2e
 
 - create-next-app の Recommend (TypeScript, Tailwind CSS, ESLint, App Router, and Turbopack) を使用して雛形を作成
   - Next.js は仕様書に記載の v16 を使用
-  - pnpm に変更（高速化とディスク容量に優しい）
+  - pnpm に変更
   - button, input, pagination, spinner は shadcn/ui を使用
 
 ### コンポーネント設計
@@ -138,7 +138,7 @@ src/
 
 ### CI
 
-- GitHub Actions を使用し、lint, type-check, test を実行
+- GitHub Actions を使用し、format:check, lint, type-check, test:ci, e2e を実行
 
 ### ホスティング
 
@@ -149,7 +149,6 @@ src/
 ### 使用ツール
 
 - Claude Code (Opus 4.7)
-- Antigravity (Gemini 3.1)
 - Antigravity IDE (Gemini 3.5)
 
 ### AI を使った範囲
@@ -186,9 +185,5 @@ src/
 
 ![Error Log](./docs/screenshot/image-1779423139345.png)
 
-- `use cache` ディレクティブをつけた関数内で例外を throw すると、その例外は呼び出し元の try/catch ブロックに到達せず、Server Components のレンダリングエラーとして直接エラーバウンダリ（`error.tsx`）に到達してしまう
-- fetch の `revalidate`, `tags` を使うキャッシュ方法に変更し問題を解決した。
-
-## 学んだこと
-
-- `use cache` ディレクティブをつけた関数内で、return したものがキャッシュされる。つまり、エラー時の結果をキャッシュしないようにするには、 `use cache` ディレクティブをつけた関数内で例外を投げる必要があった。しかし、サーバーコンポーネントは例外をthrow するとレンダリングエラーが発生し 500 エラーの画面が表示される。
+- 原因は`use cache` ディレクティブをつけた関数内で例外を throw すると、その例外は呼び出し元の try/catch ブロックに到達せず、Server Components のレンダリングエラーとして直接エラーバウンダリ（`error.tsx`）に到達してしまう（`use cache` がキャッシュ境界を作っており、throw した Error クラスがシリアライズされて `instanceof GitHubApiError` が false になり、上位の `service.ts` の catch をすり抜けたこと。ローカル (`next dev`) ではキャッシュが in-memory のためシリアライズが発生せず再現しなかった。）
+- fetch の `next: { revalidate, tags }` を使うキャッシュ方法に変更し問題を解決した。
