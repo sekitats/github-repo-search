@@ -108,7 +108,7 @@ src/
   - GitHub API クライアント `client.ts` を mock し、`service.ts` の API のレスポンスのテストを実装した。
   - 実を言うと、`client.ts` をモックしてテストしていたが、AIにレビューしてもらい、`fetch` をモックするべきとアドバイスを受けて修正した。
 
-##### lib/github のカバレッジ１００％
+##### lib/github のカバレッジ100％
 
 ![lib test coverage](./docs/screenshot/image-lib-test-coverage.png)
 
